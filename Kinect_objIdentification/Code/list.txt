@@ -1,0 +1,5 @@
+coffee_mug
+cereal_box
+ball
+plate
+light_bulb

@@ -1,0 +1,11 @@
+LeafSize       :0.0001
+MaxIterations for removing planes       :200
+Distance threshold for removing planes       :0.02
+Euclidean ClusterTolerance       :0.04
+MinClusterSize       :100
+MaxClusterSize       :25000
+Number of nearest neighbours       :6
+Normal estimation RadiusSearch       :0.05
+VFHS RadiusSearch       :0.05
+x-PassfilterMIN       :-0.5
+x-PassfilterMIN       :0.5q

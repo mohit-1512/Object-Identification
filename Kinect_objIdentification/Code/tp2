@@ -1,0 +1,216 @@
+##list.txt train_parameters.txt
+from sys import argv
+from stringvalidator import StringValidator
+
+import wx
+import os
+validator = StringValidator()
+
+class find_obj(wx.Panel):
+    
+    def __init__(self, parent):
+        
+        wx.Panel.__init__(self, parent)
+## for alignment
+
+        grid = wx.GridBagSizer(hgap=3, vgap=2)
+        paramgrid=wx.GridBagSizer(hgap=7,vgap=4)
+        
+##  for contents of dropdownbox
+
+        
+        self.all_obj_list = [line.strip() for line in open(argv[1], 'r')]
+        self.sampleList=self.all_obj_list
+        self.sel_obj_list=[]
+
+##for parameters
+        self.all_parameters = [line.strip() for line in open(argv[2], 'r')]
+        self.tbbox_param_val=self.all_parameters
+        self.list=[]
+
+        i=-1
+        p=-1
+        q=0
+        for e in self.all_parameters:
+##            print i
+            i=i+1
+            if i%2==0:
+                p=p+1
+                q=0
+            else:
+                q=q+2
+            self.list.append(e[0:e.index(':')])
+            self.param_label = wx.StaticText(self,label= e[0:e.index(':')])
+            paramgrid.Add(self.param_label, pos=(p,q))
+            self.tbbox_param_val[i]= wx.TextCtrl(self,value=e[e.index(':')+1:len(e)],size=(200,20))
+##            self.Bind(wx.EvtText, self.Valtbox, self.tbbox_param_val)
+            paramgrid.Add(self.tbbox_param_val[i], pos=(p,q+1))
+        
+##        q=0
+##        for e in self.all_parameters:
+##            print ("%s :%s" %(list[q],self.tbbox_param_val[q].GetValue()))
+##            q=q+1
+            
+##Edit button
+        self.Edit_button =wx.Button(self,pos=(500,150), label="Edit Parameters")
+        self.Bind(wx.EVT_BUTTON, self.Edit_OnClick,self.Edit_button)
+
+        
+ 
+##for dropdownbox        
+
+        self.lblselobj = wx.StaticText(self, label="Select object to identify:")
+        grid.Add(self.lblselobj, pos=(0,0))
+        self.drplist = wx.ComboBox(self, size=(200, -1), choices=self.sampleList, style=wx.CB_READONLY)
+        grid.Add(self.drplist, pos=(0,1))
+        self.Bind(wx.EVT_COMBOBOX, self.EvtComboBox_find_obj, self.drplist)
+
+##label for foll obj to be identified
+        self.quote = wx.StaticText(self, label="Following objects will be identified")
+        grid.Add(self.quote, pos=(1,0))
+##list of obj selected
+        self.logger = wx.TextCtrl(self, size=(200,300), style=wx.TE_MULTILINE | wx.TE_READONLY)
+        grid.Add(self.logger, pos=(1,1))
+        
+##find now A button
+        self.button =wx.Button(self, label="Find now")
+        self.Bind(wx.EVT_BUTTON, self.button_Click,self.button)
+        
+##self.Bind(wx.EVT_BUTTON, self.OnClick,self.button)
+        grid.Add(self.button, pos=(2,1))
+
+        clearButton = wx.Button(self, wx.ID_CLEAR, "Clear",pos=(100,200))
+        self.Bind(wx.EVT_BUTTON, self.OnClear_find_obj, clearButton)
+            
+##find all button
+        self.findall = wx.Button(self, wx.ID_ANY, "Find All",pos=(100,160))
+        self.Bind(wx.EVT_BUTTON,self.Findall_Click,self.findall)
+##to fit in grid
+      
+        
+        # Use some sizers to see layout options
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(grid, 0, wx.EXPAND)
+        self.sizer.Add(paramgrid, 0, wx.EXPAND)
+
+        #Layout sizers
+        self.SetSizer(self.sizer)
+        self.SetAutoLayout(1)
+        self.sizer.Fit(self)
+        self.Show()
+
+    def Findall_Click(self, event):
+##code to find  all objects in the  array self.all_obj_list contains objects to be searched
+        print 'in findall_Click'
+##            os.system('pcl_viewer scene18_ascii.pcd') 
+        
+    def button_Click(self, event):
+##code to find objects in the list and array self.sel_obj_list contains objects to be searched
+        print 'in button_click'
+    
+    def Edit_OnClick(self,event):
+        for x in range(0,len(self.tbbox_param_val)):
+                    if not validator.validate(self.tbbox_param_val[x].GetValue(),['is_numeric']):
+                        wx.MessageBox("Enter Integer Value","ERROR")
+
+
+        open(argv[2], 'w').close()
+        with open(argv[2], "a") as f:
+            q=0
+            for e in self.all_parameters:
+                f.write("%s :%s\n" %(self.list[q],self.tbbox_param_val[q].GetValue()))
+                q=q+1
+##ALl values present in array self.tbbox_param_val
+    
+        
+    def EvtComboBox_find_obj(self, event):
+        self.logger.AppendText(event.GetString()+'\n')
+        self.sel_obj_list.append(event.GetString())
+        self.sampleList.remove(event.GetString())
+        
+## print self.sel_obj_list
+##reload new list
+        self.drplist = wx.ComboBox(self,pos=(236,0), size=(200, -1), choices=self.sampleList, style=wx.CB_READONLY)
+        self.Bind(wx.EVT_COMBOBOX, self.EvtComboBox_find_obj, self.drplist)
+
+    def OnClear_find_obj(self, event):
+        self.logger.Clear()
+
+    
+
+##code to train new obj
+    
+class train_new_obj(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        grid1 = wx.GridBagSizer(hgap=6, vgap=2)
+##label for name of obj
+        self.obj_name = wx.StaticText(self,label="Enter Objects name: ")
+        grid1.Add(self.obj_name, pos=(0,0))
+##textbox for name
+        # A multiline TextCtrl - This is here to show how the events work in this program, don't pay too much attention to it
+        self.tbbox_obj_name = wx.TextCtrl(self,size=(200,20))
+        grid1.Add(self.tbbox_obj_name, pos=(0,1))
+        
+##Browse path of ply file
+        
+        # add a spacer to the sizer
+        grid1.Add((5, 20), pos=(1,0))
+        
+        
+##label for name of obj
+        self.tolorence= wx.StaticText(self,label="Enter tolorence: ")
+        grid1.Add(self.tolorence, pos=(2,0))
+
+##textbox for tolerence val
+        self.tbbox_tol_val = wx.TextCtrl(self, size=(200,20))
+        grid1.Add(self.tbbox_tol_val, pos=(2,1))
+##train_using_kinect
+        Train_using_kinect= wx.Button(self, wx.ID_ANY, "Train using kinect")
+        self.Bind(wx.EVT_BUTTON, self.Train_using_kinect_Click,Train_using_kinect)
+        grid1.Add(Train_using_kinect, pos=(3,1))
+
+
+##        ##self.Bind(wx.EVT_BUTTON, self.OnClear_find_obj, clearButton)
+##        ##OR space
+####        grid1.Add((2, 10), pos=(4,0))
+####    
+####        ##label for OR
+####        self.OR= wx.StaticText(self,label="OR")
+####        grid1.Add(self.OR, pos=(5,1))
+####
+####        ##Path for ply file
+####        path_plyfile= wx.Button(self, wx.ID_ANY, "Browse for ply file")
+####        self.Bind(wx.EVT_BUTTON, self.Path_plyfile_browse,path_plyfile)
+####        grid1.Add(path_plyfile, pos=(6,1))
+
+
+
+        ##to fit in grid
+        self.SetSizerAndFit(grid1)
+
+    def Train_using_kinect_Click(self, event):
+        ##write the path of program to connect to kinect and click images
+##        print self.tbbox_obj_name.GetValue()
+##        print self.tbbox_tol_val.GetValue()
+        if not validator.validate(self.tbbox_tol_val.GetValue(),['is_alphanumeric']):
+            wx.MessageBox("Enter object name as a alphanumeric value","ERROR")
+        if not validator.validate(self.tbbox_obj_name.GetValue(),['is_numeric']):
+            wx.MessageBox("Enter Integer Value","ERROR")
+##    def Path_plyfile_browse(self, event):
+
+
+
+app = wx.App(False)
+frame = wx.Frame(None, title="Demo with Notebook")
+frame.SetPosition(wx.Point(0,0))
+frame.SetSize(wx.Size(1400,400))
+nb = wx.Notebook(frame)
+nb.AddPage(train_new_obj(nb), "Train new Object")
+nb.AddPage(find_obj(nb), "Find objects")
+
+
+frame.Show()
+
+app.MainLoop()
